@@ -88,20 +88,17 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
     return puzzle_detail
 
 
-if __name__ == "__main__":
-    args = parser.parse_args()
-    cookie = os.getenv("NYT_COOKIE")
-    if not cookie:
-        cookie = login(args.username, args.password)
-
-    start_date = datetime.strptime(args.start_date, DATE_FORMAT)
-    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+def get_puzzle_stats(puzzle_type, start_date, end_date, cookie):
+    if not isinstance(start_date, datetime):
+        start_date = datetime.strptime(start_date, DATE_FORMAT)
+    if not isinstance(end_date, datetime):
+        end_date = datetime.strptime(end_date, DATE_FORMAT)
 
     days_between = (end_date - start_date).days
     batches = (days_between // 100) + 1
 
     print(
-        f"Getting stats from {args.start_date} until {args.end_date} in {batches} batches"
+        f"Getting stats from {datetime.strftime(start_date, DATE_FORMAT)} until {datetime.strftime(end_date, DATE_FORMAT)} in {batches} batches"
     )
 
     date = start_date
@@ -117,7 +114,7 @@ if __name__ == "__main__":
     for batch in (pbar := tqdm(range(batches))):
         pbar.set_description(f"Start date: {batch_start}")
         batch_overview = get_v3_puzzle_overview(
-            puzzle_type=args.type,
+            puzzle_type=puzzle_type,
             start_date=batch_start,
             end_date=batch_end,
             cookie=cookie,
@@ -133,6 +130,17 @@ if __name__ == "__main__":
         puzzle["solving_seconds"] = detail.get("secondsSpentSolving", None)
         puzzle["day_of_week_name"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%A')
         puzzle["day_of_week_integer"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%w')
+
+    return puzzle_overview
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    cookie = os.getenv("NYT_COOKIE")
+    if not cookie:
+        cookie = login(args.username, args.password)
+
+    puzzle_overview = get_puzzle_stats(args.type, args.start_date, args.end_date, cookie)
 
     fields = [
         "author",
