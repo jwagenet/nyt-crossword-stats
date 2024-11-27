@@ -119,6 +119,19 @@ def batch_process_puzzle_overview(puzzle_type, start_date, end_date, cookie):
     return puzzle_overview
 
 
+def process_puzzle_detail(puzzle, cookie):
+    if puzzle["solved"] == True:
+        detail = get_v3_puzzle_detail(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
+        puzzle["solving_seconds"] = detail.get("secondsSpentSolving", None)
+    else:
+        puzzle["solving_seconds"] = None
+
+    puzzle["day_of_week_name"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%A')
+    puzzle["day_of_week_integer"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%w')
+
+    return puzzle
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
     cookie = os.getenv("NYT_COOKIE")
@@ -133,14 +146,7 @@ if __name__ == "__main__":
     print("\nGetting puzzle solve times\n")
 
     for puzzle in tqdm(puzzle_overview):
-        if puzzle["solved"] == True:
-            detail = get_v3_puzzle_detail(puzzle_id=puzzle["puzzle_id"], cookie=cookie)
-            puzzle["solving_seconds"] = detail.get("secondsSpentSolving", None)
-        else:
-            puzzle["solving_seconds"] = None
-
-        puzzle["day_of_week_name"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%A')
-        puzzle["day_of_week_integer"] = datetime.strptime(puzzle["print_date"], DATE_FORMAT).strftime('%w')
+        puzzle = process_puzzle_detail(puzzle, cookie)
 
     fields = [
         "author",
