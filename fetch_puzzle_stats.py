@@ -88,20 +88,13 @@ def get_v3_puzzle_detail(puzzle_id, cookie):
     return puzzle_detail
 
 
-def get_puzzle_stats(puzzle_type, start_date, end_date, cookie):
-    if not isinstance(start_date, datetime):
-        start_date = datetime.strptime(start_date, DATE_FORMAT)
-    if not isinstance(end_date, datetime):
-        end_date = datetime.strptime(end_date, DATE_FORMAT)
-
+def batch_process_puzzle_overview(puzzle_type, start_date, end_date, cookie):
     days_between = (end_date - start_date).days
     batches = (days_between // 100) + 1
 
     print(
         f"Getting stats from {datetime.strftime(start_date, DATE_FORMAT)} until {datetime.strftime(end_date, DATE_FORMAT)} in {batches} batches"
     )
-
-    date = start_date
 
     if end_date - start_date > timedelta(days=100):
         batch_end = start_date + timedelta(days=100)
@@ -132,7 +125,10 @@ if __name__ == "__main__":
     if not cookie:
         cookie = login(args.username, args.password)
 
-    puzzle_overview = get_puzzle_stats(args.type, args.start_date, args.end_date, cookie)
+    start_date = datetime.strptime(args.start_date, DATE_FORMAT)
+    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+
+    puzzle_overview = batch_process_puzzle_overview(args.type, start_date, end_date, cookie)
 
     print("\nGetting puzzle solve times\n")
 
